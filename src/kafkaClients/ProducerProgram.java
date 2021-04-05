@@ -12,9 +12,9 @@ public class ProducerProgram {
       prop.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
       prop.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
 
-      ProducerRecord producerRecord=new ProducerRecord("SourceTopic","InputData", JSON_DataFeedFromEdgeNode);
+      ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("SourceTopic","InputData", JSON_DataFeedFromEdgeNode);
 
-      KafkaProducer kafkaProducer = new KafkaProducer(prop);
+      KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(prop);
       kafkaProducer.send(producerRecord);
       kafkaProducer.close();
 
