@@ -11,6 +11,9 @@ import org.apache.kafka.streams.state.KeyValueStore;
 
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Iterator;
+
 
 import redis.clients.jedis.Jedis; 
 import org.json.JSONObject;
@@ -23,11 +26,6 @@ public class AggregatorStream {
     //Connecting to Redis server on localhost 
     Jedis jedis = new Jedis("localhost"); 
     System.out.println("Connection to Redis Server Sucessful!"); 
-    // Get the stored data and print it 
-    String redisString=jedis.get("1111");
-    System.out.println("Stored string in redis:: "+ redisString);
-    JSONObject obj1=new JSONObject(str);
-    System.out.println(obj1.get("Organization"));
 
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "JSON_Aggregator");
@@ -46,11 +44,47 @@ public class AggregatorStream {
     KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(producerProp);
 
     kStream.foreach((k,v)-> {
+      System.out.println("-------------Source Topic Navigation Started-----------------");
+      System.out.println("Key: "+k);
+      System.out.println("Value: "+v);
+      JSONObject sourceTopicMessageValue=new JSONObject(v);
 
-      ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic","InputData",(k+v+"Some check"));
-      kafkaProducer.send(producerRecord);
-      kafkaProducer.close();
-      System.out.println(k);
+      Set<?> set = sourceTopicMessageValue.keySet();
+      Iterator<?> iter = set.iterator();
+      while(iter.hasNext()){
+        String JSON_ObjKey = iter.next().toString();
+        System.out.println("------------->"+JSON_ObjKey);
+
+        // Get the stored data and print it 
+        String redisString=jedis.get(JSON_ObjKey);
+        if(redisString==""){
+          System.out.println("--------->Blank");
+        } else if (redisString == null){
+          System.out.println("--------->NULL");
+        } else if(redisString.isEmpty()){
+          System.out.println("--------->Empty");
+        } else {
+          JSONObject subSetObj=sourceTopicMessageValue.getJSONObject(JSON_ObjKey);
+          System.out.println("============>>"+subSetObj);
+          System.out.println("Stored string in redis:: "+ redisString);
+          JSONObject redisSubObject=new JSONObject(redisString);
+
+          JSONObject finalJSONObject=new JSONObject();
+          finalJSONObject.put("time", subSetObj.get("time"));
+          finalJSONObject.put("Reading", subSetObj.get("Reading"));
+          finalJSONObject.put("Organization", redisSubObject.get("Organization"));
+          finalJSONObject.put("Tags", redisSubObject.get("Tags"));
+          JSONObject enrichedObject=new JSONObject();
+          enrichedObject.put(JSON_ObjKey,finalJSONObject);
+          System.out.println("============>>>>>>"+enrichedObject.toString());
+          String strFinal=enrichedObject.toString();
+
+
+
+          ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic","EnrichedOutput",(strFinal));
+          kafkaProducer.send(producerRecord);
+        }
+      }
     });
 
 
@@ -63,6 +97,7 @@ public class AggregatorStream {
 
     KafkaStreams streams = new KafkaStreams(builder.build(), props);
     streams.start();
+    //kafkaProducer.close();
     System.out.println("AggregatorStream Logic End!");
   }
 }
