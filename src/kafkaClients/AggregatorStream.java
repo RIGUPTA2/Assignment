@@ -26,9 +26,22 @@ public static void main(final String[] args) throws Exception {
 
     StreamsBuilder builder = new StreamsBuilder();
     KStream<String, String> kStream = builder.stream("SourceTopic");
+    //KStream<String, String> kStream =     builder.stream("SourceTopic", Consumed.with(stringSerde, stringSerde)).mapValues(String::toUpperCase).to("EnrichedTopic", Produced.with(stringSerde, stringSerde));
     String finalData="";
 
-    finalData= kStream.foreach((k,v)-> {return k.toString();});
+    kStream.foreach((k,v)-> {
+      Properties producerProp=new Properties();
+      producerProp.put("bootstrap.servers","localhost:9092");
+      producerProp.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      producerProp.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+
+      ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic","InputData",(k+v+"Some check"));
+      KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(producerProp);
+      kafkaProducer.send(producerRecord);
+      kafkaProducer.close();
+      System.out.println(k);
+    });
+
 
     /*KTable<String, Long> wordCounts = kStream
     .flatMapValues(textLine -> Arrays.asList(textLine.toLowerCase().split("\\W+")))
@@ -39,12 +52,6 @@ public static void main(final String[] args) throws Exception {
 
     KafkaStreams streams = new KafkaStreams(builder.build(), props);
     streams.start();
-
-    ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("AggregatorTopic","InputData",finalData );
-
-    KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(props);
-    kafkaProducer.send(producerRecord);
-    kafkaProducer.close();
 
     System.out.println("AggregatorStream Logic End!");
   }
