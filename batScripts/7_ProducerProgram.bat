@@ -1,0 +1,8 @@
+Rem 0. Redis server is already installed using Windows MSI file and is running on system start and could be stopped/started from services.msc 
+
+Rem 1. Compile Producer Program
+javac -Xlint:unchecked -d ..\classes\ -cp .;..\lib\kafka\kafka-clients-2.7.0.jar;..\lib\kafka\slf4j-api-2.0.0-alpha1.jar;..\lib\kafka\lz4-java-1.7.1.jar;..\lib\kafka\snappy-java-1.1.7.7.jar;..\lib\kafka\zstd-jni-1.4.5-6.jar ..\src\kafkaClients\ProducerProgram.java
+
+
+Rem 2. Execute Producer Program
+java -cp ..\classes;..\lib\kafka\kafka-clients-2.7.0.jar;..\lib\kafka\slf4j-api-2.0.0-alpha1.jar;..\lib\kafka\lz4-java-1.7.1.jar;..\lib\kafka\snappy-java-1.1.7.7.jar;..\lib\kafka\zstd-jni-1.4.5-6.jar ProducerProgram
