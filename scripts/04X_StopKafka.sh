@@ -1,4 +1,3 @@
-Rem 1. Start Zookeeper after setting log.dirs in server.properties and dataDir in zookeeper.properties
-D:\
-cd D:\ProgramFiles\kafka
-.\bin\windows\kafka-server-stop.bat
+# 1. Stop Kafka
+cd ../../kafka
+./bin/kafka-server-stop.sh

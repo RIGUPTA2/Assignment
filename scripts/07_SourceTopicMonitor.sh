@@ -1,4 +1,5 @@
-Rem 1. Start Zookeeper after setting log.dirs in server.properties and dataDir in zookeeper.properties
-D:\
-cd D:\ProgramFiles\kafka
-.\bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic SourceTopic --from-beginning
+#Author: Rishi
+#Source Topic Monitor
+cd /home/ubuntu/kafka
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic SourceTopic --from-beginning
+cd ../Assignment/scripts
