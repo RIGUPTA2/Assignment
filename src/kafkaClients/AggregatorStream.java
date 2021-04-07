@@ -47,43 +47,46 @@ public class AggregatorStream {
       System.out.println("-------------Source Topic Navigation Started-----------------");
       System.out.println("Key: "+k);
       System.out.println("Value: "+v);
-      JSONObject sourceTopicMessageValue=new JSONObject(v);
+      try{
+        JSONObject sourceTopicMessageValue=new JSONObject(v);
+        Set<?> set = sourceTopicMessageValue.keySet();
+        Iterator<?> iter = set.iterator();
+        while(iter.hasNext()){
+          String JSON_ObjKey = iter.next().toString();
+          System.out.println("------------->"+JSON_ObjKey);
 
-      Set<?> set = sourceTopicMessageValue.keySet();
-      Iterator<?> iter = set.iterator();
-      while(iter.hasNext()){
-        String JSON_ObjKey = iter.next().toString();
-        System.out.println("------------->"+JSON_ObjKey);
+          // Get the stored data and print it 
+          String redisString=jedis.get(JSON_ObjKey);
+          if(redisString==""){
+            System.out.println("--------->Blank");
+          } else if (redisString == null){
+            System.out.println("--------->NULL");
+          } else if(redisString.isEmpty()){
+            System.out.println("--------->Empty");
+          } else {
+            JSONObject subSetObj=sourceTopicMessageValue.getJSONObject(JSON_ObjKey);
+            System.out.println("============>>"+subSetObj);
+            System.out.println("Stored string in redis:: "+ redisString);
+            JSONObject redisSubObject=new JSONObject(redisString);
 
-        // Get the stored data and print it 
-        String redisString=jedis.get(JSON_ObjKey);
-        if(redisString==""){
-          System.out.println("--------->Blank");
-        } else if (redisString == null){
-          System.out.println("--------->NULL");
-        } else if(redisString.isEmpty()){
-          System.out.println("--------->Empty");
-        } else {
-          JSONObject subSetObj=sourceTopicMessageValue.getJSONObject(JSON_ObjKey);
-          System.out.println("============>>"+subSetObj);
-          System.out.println("Stored string in redis:: "+ redisString);
-          JSONObject redisSubObject=new JSONObject(redisString);
-
-          JSONObject finalJSONObject=new JSONObject();
-          finalJSONObject.put("time", subSetObj.get("time"));
-          finalJSONObject.put("Reading", subSetObj.get("Reading"));
-          finalJSONObject.put("Organization", redisSubObject.get("Organization"));
-          finalJSONObject.put("Tags", redisSubObject.get("Tags"));
-          JSONObject enrichedObject=new JSONObject();
-          enrichedObject.put(JSON_ObjKey,finalJSONObject);
-          System.out.println("============>>>>>>"+enrichedObject.toString());
-          String strFinal=enrichedObject.toString();
+            JSONObject finalJSONObject=new JSONObject();
+            finalJSONObject.put("time", subSetObj.get("time"));
+            finalJSONObject.put("Reading", subSetObj.get("Reading"));
+            finalJSONObject.put("Organization", redisSubObject.get("Organization"));
+            finalJSONObject.put("Tags", redisSubObject.get("Tags"));
+            JSONObject enrichedObject=new JSONObject();
+            enrichedObject.put(JSON_ObjKey,finalJSONObject);
+            System.out.println("============>>>>>>"+enrichedObject.toString());
+            String strFinal=enrichedObject.toString();
 
 
 
-          ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic","EnrichedOutput",(strFinal));
-          kafkaProducer.send(producerRecord);
+            ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic","EnrichedOutput",(strFinal));
+            kafkaProducer.send(producerRecord);
+          }
         }
+      } catch(JSONException je){
+        System.out.println("Not a JSON object");
       }
     });
 
