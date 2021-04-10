@@ -12,33 +12,32 @@ public class ProducerProgram {
       prop.put("bootstrap.servers","localhost:9092");
       prop.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
       prop.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(prop);
 
-      Logger logger = Logger.getLogger("MyLog");  
+      Logger logger = Logger.getLogger("MyLog1");  
       FileHandler fh;  
       try {
+         System.setProperty("java.util.logging.SimpleFormatter.format","[%1$tF %1$tT] [%4$-7s] %5$s %n");
          // This block configure the logger with handler, formatter and start time
-         fh = new FileHandler("../logs/PerformanceAnalysisLogFile.csv");  
+         fh = new FileHandler("../logs/ProducerLogFile_"+args[0]+".csv");  
          logger.addHandler(fh);
          SimpleFormatter formatter = new SimpleFormatter();  
          fh.setFormatter(formatter);
-         startTime=System.currentTimeMillis();
+         System.out.println("Start of Producer");
+         for(int key=1001;key<=2000;key++){
+            startTime=System.currentTimeMillis();
+            //String JSON_DataFeedFromEdgeNode="{\"1111\":{\"time\": 1617193254000,\"Reading\": 44},\"1112\": {\"time\": 1617193254000,\"Reading\": -1},\"1113\": {\"time\": 1617193254000,\"Reading\": 4}}";
+            String JSON_DataFeedFromEdgeNode="{\"time\": "+System.currentTimeMillis()+",\"Reading\": "+((int)((Math.random() * 40) + 1))+"}";
+            ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("SourceTopic",String.valueOf(key), JSON_DataFeedFromEdgeNode);
+            kafkaProducer.send(producerRecord);
+            logger.info("EndAnalysisRecord;"+String.valueOf(key)+";"+(System.currentTimeMillis() - startTime)+";");
+         }
       } catch (SecurityException e) {  
          e.printStackTrace();  
       } catch (IOException e) {  
          e.printStackTrace();  
       }
-
-      String JSON_DataFeedFromEdgeNode="{\"1111\":{\"time\": 1617193254000,\"Reading\": 44},\"1112\": {\"time\": 1617193254000,\"Reading\": -1},\"1113\": {\"time\": 1617193254000,\"Reading\": 4}}";
-      //System.out.println("Input from data source"+JSON_DataFeedFromEdgeNode);
-
-      ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("SourceTopic","InputData", JSON_DataFeedFromEdgeNode);
-
-      KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(prop);
-      kafkaProducer.send(producerRecord);
-      logger.info("EndAnalysisRecord;"+(System.currentTimeMillis() - startTime)+";");
-
       kafkaProducer.close();
-
       System.out.println("\nJSON Data feed from Edge node is submitted in Source Topic!");
    }
 }
