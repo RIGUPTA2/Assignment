@@ -6,8 +6,12 @@ import java.util.logging.*;
 import java.io.*;
 
 public class ProducerProgram { 
-   static long startTime;
+   static long perRecordStartTime;
+   static long globalStartTime;
+   static int key;
    public static void main(String[] args) {
+      globalStartTime=System.nanoTime();
+
       Properties prop=new Properties();
       prop.put("bootstrap.servers","localhost:9092");
       prop.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
@@ -24,20 +28,23 @@ public class ProducerProgram {
          SimpleFormatter formatter = new SimpleFormatter();  
          fh.setFormatter(formatter);
          System.out.println("Start of Producer");
-         for(int key=1001;key<=2000;key++){
-            startTime=System.currentTimeMillis();
-            //String JSON_DataFeedFromEdgeNode="{\"1111\":{\"time\": 1617193254000,\"Reading\": 44},\"1112\": {\"time\": 1617193254000,\"Reading\": -1},\"1113\": {\"time\": 1617193254000,\"Reading\": 4}}";
+         for(key=1001;key<=Integer.parseInt(args[1]);key++){
+            //perRecordStartTime=System.nanoTime();
             String JSON_DataFeedFromEdgeNode="{\"time\": "+System.currentTimeMillis()+",\"Reading\": "+((int)((Math.random() * 40) + 1))+"}";
-            ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("SourceTopic",String.valueOf(key), JSON_DataFeedFromEdgeNode);
+            ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>(args[2],String.valueOf(key), JSON_DataFeedFromEdgeNode);
             kafkaProducer.send(producerRecord);
-            logger.info("EndAnalysisRecord;"+String.valueOf(key)+";"+(System.currentTimeMillis() - startTime)+";");
+            //logger.info("ProducerPerRecordAnalysis;"+String.valueOf(key)+";"+((System.nanoTime() - perRecordStartTime)/1000)+";");
          }
       } catch (SecurityException e) {  
          e.printStackTrace();  
       } catch (IOException e) {  
          e.printStackTrace();  
       }
+      logger.info("ProducerGlobalAnalysis;"+String.valueOf(key)+";"+((System.nanoTime() - globalStartTime)/1000)+";");
       kafkaProducer.close();
       System.out.println("\nJSON Data feed from Edge node is submitted in Source Topic!");
    }
 }
+
+//Sample message
+//String JSON_DataFeedFromEdgeNode="{\"1111\":{\"time\": 1617193254000,\"Reading\": 44},\"1112\": {\"time\": 1617193254000,\"Reading\": -1},\"1113\": {\"time\": 1617193254000,\"Reading\": 4}}";

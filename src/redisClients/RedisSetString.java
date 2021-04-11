@@ -6,7 +6,7 @@ public class RedisSetString {
       Jedis jedis = new Jedis("localhost"); 
       System.out.println("Connection to server sucessfully"); 
 
-      for(int key=1001;key<=2000;key++){
+      for(int key=1001;key<=Integer.parseInt(args[0]);key++){
       	System.out.println("{\"Organization\": {\"OrgName\": \"XYZ_"+key+"\", \"OrgCode\": "+key+", \"SiteName\": \"AAA_"+key+"\"}, \"Tags\": {\"T1\": \"A\", \"T2\": \"B\"}}");
    		//set the data in redis string
    		jedis.set(String.valueOf(key), "{\"Organization\": {\"OrgName\": \"XYZ_"+key+"\", \"OrgCode\": "+key+", \"SiteName\": \"AAA_"+key+"\"}, \"Tags\": {\"T1\": \"A\", \"T2\": \"B\"}}"); 

@@ -8,6 +8,9 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.StreamsMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -27,6 +30,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public class AggregatorStream {
   static long perRecordStartTime;
   static long globalStartTime;
+  static Collection<StreamsMetadata> s;
   public static void main(final String[] args) throws Exception {
     globalStartTime=System.nanoTime();
 
@@ -40,9 +44,11 @@ public class AggregatorStream {
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
     props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
     props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+
 
     StreamsBuilder builder = new StreamsBuilder();
-    KStream<String, String> kStream = builder.stream(args[2]);
+    KStream<String, String> kStream = builder.stream("SourceTopic");
 
     //Properties object for Producer
     Properties producerProp=new Properties();
@@ -88,12 +94,16 @@ public class AggregatorStream {
 
           ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic",sourceTopicJSON_Key,(strFinal));
           kafkaProducer.send(producerRecord);
-          //logger.info("ConsumerPerRecordAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - perRecordStartTime)/1000)+";");
-        }
-        if(Integer.parseInt(args[1])<= Integer.parseInt(sourceTopicJSON_Key)){
-          logger.info("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000)+";");
-          System.out.println("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000)+";");
-          System.exit(0);
+          logger.info("ConsumerPerRecordAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - perRecordStartTime)/1000)+";");
+          if(Integer.parseInt(args[1])== Integer.parseInt(sourceTopicJSON_Key)){
+            System.out.println("Checking logger");
+            logger.info("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000)+";");
+for (StreamsMetadata m : s) {
+    Set<TopicPartition> tp = m.topicPartitions();
+    logger.info("Topic Partition;"+tp.toString());
+}
+
+          }
         }
       });
     } catch(JSONException je){
@@ -104,12 +114,13 @@ public class AggregatorStream {
        ioe.printStackTrace();  
     } catch (Exception e) {  
        e.printStackTrace();  
-    } finally{
-      logger.info("ConsumerGlobalAnalysis_FromFinally;"+";"+((System.nanoTime() - globalStartTime)/1000)+";");
     }
 
     KafkaStreams streams = new KafkaStreams(builder.build(), props);
+    streams.cleanUp();
+
     streams.start();
+    s = streams.allMetadata();
     //kafkaProducer.close();
     System.out.println("AggregatorStream Logic End!");
   }
