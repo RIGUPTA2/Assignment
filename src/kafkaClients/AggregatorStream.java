@@ -28,7 +28,6 @@ public class AggregatorStream {
   static long perRecordStartTime;
   static long globalStartTime;
   public static void main(final String[] args) throws Exception {
-    globalStartTime=System.nanoTime();
 
     //Connecting to Redis server on localhost 
     Jedis jedis = new Jedis("localhost"); 
@@ -61,6 +60,7 @@ public class AggregatorStream {
       SimpleFormatter formatter = new SimpleFormatter();  
       fh.setFormatter(formatter);
       System.out.println("-------------Source Topic Navigation Started-----------------");
+      globalStartTime=System.nanoTime();
       kStream.foreach((sourceTopicJSON_Key,sourceTopicMessageValue)-> {
         perRecordStartTime=System.nanoTime();
         System.out.println("Key: "+sourceTopicJSON_Key);
@@ -88,11 +88,11 @@ public class AggregatorStream {
 
           ProducerRecord<String, String> producerRecord=new ProducerRecord<String, String>("EnrichedTopic",sourceTopicJSON_Key,(strFinal));
           kafkaProducer.send(producerRecord);
-          //logger.info("ConsumerPerRecordAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - perRecordStartTime)/1000)+";");
+          //logger.info("ConsumerPerRecordAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - perRecordStartTime)/1000000000)+";");
         }
         if(Integer.parseInt(args[1])<= Integer.parseInt(sourceTopicJSON_Key)){
-          logger.info("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000)+";");
-          System.out.println("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000)+";");
+          logger.info("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000000000)+";");
+          System.out.println("ConsumerGlobalAnalysis;"+sourceTopicJSON_Key+";"+((System.nanoTime() - globalStartTime)/1000000000)+";");
           System.exit(0);
         }
       });
@@ -105,7 +105,7 @@ public class AggregatorStream {
     } catch (Exception e) {  
        e.printStackTrace();  
     } finally{
-      logger.info("ConsumerGlobalAnalysis_FromFinally;"+";"+((System.nanoTime() - globalStartTime)/1000)+";");
+      logger.info("ConsumerGlobalAnalysis_FromFinally;"+";"+((System.nanoTime() - globalStartTime)/1000000000)+";");
     }
 
     KafkaStreams streams = new KafkaStreams(builder.build(), props);
