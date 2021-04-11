@@ -8,7 +8,7 @@ public class RedisGetString {
       Jedis jedis = new Jedis("localhost"); 
       System.out.println("Connection to server sucessfully"); 
       // Get the stored data and print it 
-      String str=jedis.get("1111");
+      String str=jedis.get(args[0]);
       System.out.println("Stored string in redis:: "+ str);
       JSONObject obj1=new JSONObject(str);
       System.out.println(obj1.get("Organization"));
