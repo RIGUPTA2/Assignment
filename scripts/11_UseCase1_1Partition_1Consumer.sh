@@ -8,4 +8,9 @@ do
    a=`expr $a + 1`
 done
 
-. 10_ProducerProgram.sh "$endVal"partition_"$endVal"consumer_log1 100000 SourceTopic"$endVal" &
+b=1
+while [ $b -le 10 ]    # this is loop1
+do
+	. 10_ProducerProgram.sh "$endVal"partition_"$endVal"consumer_log1 100000 SourceTopic"$endVal" &
+	 b=`expr $b + 1`
+done
