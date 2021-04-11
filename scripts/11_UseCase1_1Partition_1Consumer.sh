@@ -1,4 +1,11 @@
 #!/bin/bash
-#. 09_AggregatorStream.sh 1partition_1consumer_log1 100000 SourceTopic &
-#. 10_ProducerProgram.sh 1partition_1consumerOnly 100000 SourceTopic &
 
+endVal=$1
+a=1
+while [ $a -le $endVal ]    # this is loop1
+do
+   . 09_AggregatorStream.sh "$endVal"partition_"$endVal"consumer_log"$a" 99800 SourceTopic"$endVal" &
+   a=`expr $a + 1`
+done
+
+. 10_ProducerProgram.sh "$endVal"partition_"$endVal"consumer_log1 100000 SourceTopic"$endVal" &
