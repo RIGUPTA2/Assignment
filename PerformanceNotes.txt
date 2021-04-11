@@ -16,8 +16,7 @@ Producer:
 
 Broker:
 - 1 partition per physical disc storage to ensure log writing I/O is not a bottleneck
-- Partition load distribution using reassignment script
-- With these parameters: generate, execute, verify
+- Partition load distribution using reassignment script with these parameters: generate, execute, verify
 - num.io.threads=number of discs
 - log.flush.interval.messages, log retention, Failure detection, Replication settings
 
@@ -25,7 +24,72 @@ Consumer:
 - replica.high.watermark.checkpoint.interval.ms
 - Message offset to read
 ================
-Use Case 1:
-- Increase number of partitions: 3
-- Create 1 lakh messages: Send this multiple times
-- What to observe?
+ToDos
+-----
+- Microseconds: System.nanoTime()
+- argument and close consumer
+
+- run from latest in the queue
+Use Case 1: 1 Partition, 1 Consumer, Topic Name: SourceTopic
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1Consumer 2000
+	* 10_ProducerProgram.bat 1partition_1Consumer 2000
+	* Single Partition, Single Consumer
+	* 1001 to 2000 records=1000 records
+	* [2021-04-11 17:14:35] [INFO   ] ConsumerGlobalAnalysis;2000;5982839; 
+	* After setting Redis: [2021-04-11 17:32:24] [INFO   ] ConsumerGlobalAnalysis;2000;6267644;
+
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1Consumer 3000
+	* 10_ProducerProgram.bat 1partition_1Consumer 3000
+	* Single Partition, Single Consumer
+	* 1001 to 3000 records=2000 records
+	* [2021-04-11 17:16:16] [INFO   ] ConsumerGlobalAnalysis;3000;9214658;
+	* After setting Redis: [2021-04-11 17:33:15] [INFO   ] ConsumerGlobalAnalysis;3000;8875135;
+
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1Consumer 6000
+	* 10_ProducerProgram.bat 1partition_1Consumer 6000
+	* Single Partition, Single Consumer
+	* 1001 to 6000 records=5000 records
+	* [2021-04-11 17:17:37] [INFO   ] ConsumerGlobalAnalysis;6000;9381222;
+	* After setting Redis: [2021-04-11 17:34:33] [INFO   ] ConsumerGlobalAnalysis;6000;15431024;
+
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1Consumer 11000
+	* 10_ProducerProgram.bat 1partition_1Consumer 11000
+	* Single Partition, Single Consumer
+	* 1001 to 11000 records=10000 records
+	* [2021-04-11 17:04:58] [INFO   ] ConsumerGlobalAnalysis;11000;30815899;
+	* After setting Redis: [2021-04-11 17:35:48] [INFO   ] ConsumerGlobalAnalysis;11000;25613813; 
+
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1consumerOnly 100000 SourceTopic
+	* 10_ProducerProgram.bat 1partition_1consumerOnly 100000 SourceTopic
+	* 2 Partitions, Single Consumer
+	* 1001 to 3000 records=2000 records
+	* [2021-04-11 18:39:37] [INFO   ] ConsumerGlobalAnalysis;100000;32710938;
+
+Use Case 2: 2 Partitions, 1 Consumer, Topic Name: SourceTopic2, Topic script: 11_CreateSourceTopic_2Partition.bat
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 1partition_1Consumer 2000 SourceTopic2
+	* 10_ProducerProgram.bat 1partition_1Consumer 2000 SourceTopic2
+	* 2 Partitions, Single Consumer
+	* 1001 to 2000 records=1000 records
+	* [2021-04-11 17:46:09] [INFO   ] ConsumerGlobalAnalysis;2000;8128655;
+
+	* Clean class files
+	* Clean up log files
+	* 09_AggregatorStream.bat 2partition_2consumer 100000 SourceTopic2
+	* 10_ProducerProgram.bat 2partition_2consumer 100000 SourceTopic2
+	* 2 Partitions, Single Consumer
+	* 1001 to 3000 records=2000 records
+	* 
+
+Use Case 2: Setup consumer groups
